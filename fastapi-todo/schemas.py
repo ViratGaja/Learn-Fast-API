@@ -14,4 +14,4 @@ class Todo(TodoBase):
     id: int                         # Database create panna 'id' inga add aagum
 
     class Config:                   # Pydantic-oda special settings idhu
-        orm_mode = True             # SQLAlchemy (ORM) objects-ah direct-ah JSON-ah mathurathuku idhu romba mukkiyam
+       from_attributes = True  # Pydantic v2 syntax         # SQLAlchemy (ORM) objects-ah direct-ah JSON-ah mathurathuku idhu romba mukkiyam

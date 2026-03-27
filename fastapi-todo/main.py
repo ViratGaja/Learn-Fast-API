@@ -23,7 +23,7 @@ def create(todo: TodoCreate, db: Session = Depends(get_db)):
      
      # Pydantic Schema data-va (JSON) SQL Model-ah mathuthu
      # **todo.dict() na title, description ella data-vaiyum "unpack" pannum
-     db_todo = Todo(**todo.dict()) 
+     db_todo = Todo(**todo.model_dump())
      
      db.add(db_todo)      # Intha data-va Database-la 'Add' pannu (Stage)
      db.commit()          # Changes-ah database-la 'Save' pannu (Finalize)
