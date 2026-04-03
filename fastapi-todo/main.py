@@ -1,36 +1,32 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends,HTTPException
 from schemas import Todo as TodoSchema, TodoCreate
 from database import SessionLocal, Base, engine
 from sqlalchemy.orm import Session
 from models import Todo
 
-# Database-la intha table illana, thonthira illama create pannidum
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Database Connection handle panna intha function (Dependency)
-def get_db():
-    db = SessionLocal() # Connection-ah open pannuthu
-    try:
-        yield db       # Intha connection-ah API function-ku tharuval (Provide)
-    finally:
-        db.close()     # Velai mudinja apram connection-ah close pannidum (Safety)
 
-# POST Method - Pudhu Todo-va create panna
+def get_db():
+    db = SessionLocal() 
+    try:
+        yield db      
+    finally:
+        db.close()    
+
 @app.post("/todos", response_model=TodoSchema)
 def create(todo: TodoCreate, db: Session = Depends(get_db)):
      
-     # Pydantic Schema data-va (JSON) SQL Model-ah mathuthu
-     # **todo.dict() na title, description ella data-vaiyum "unpack" pannum
+
      db_todo = Todo(**todo.model_dump())
      
-     db.add(db_todo)      # Intha data-va Database-la 'Add' pannu (Stage)
-     db.commit()          # Changes-ah database-la 'Save' pannu (Finalize)
-     db.refresh(db_todo)  # DB-la generate aana 'id'-ya thirumba model-ku kondu vaa
+     db.add(db_todo)      
+     db.commit()          
+     db.refresh(db_todo) 
      
-     return db_todo       # Create aana data-va response-ah thirumba anupu
- 
+     return db_todo      
  
  
  #Get
@@ -41,3 +37,37 @@ def ready_todos(db: Session=Depends(get_db)):
 
 
 
+#get single
+@app.get("/todos/{todo_id}",response_model=TodoSchema)
+def read_todo(todo_id:int,db: Session=Depends(get_db)):
+    todo=db.query(Todo).filter(Todo.id==todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404,detail="Todo not found")
+    return todo
+
+
+#update
+
+@app.put("/todos/{todo_id}",response_model=TodoSchema)
+def update(todo_id:int,updated:TodoCreate, db: Session=Depends(get_db)):
+    todo=db.query(Todo).filter(Todo.id==todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404,detail="Todo not found")
+    for key,value in updated.dict().items():
+        setattr(todo,key,value)
+    db.commit()
+    db.refresh(todo)
+    return todo
+
+
+
+#Delete
+@app.delete("/todos/{todo_id}")
+def delete_todo(todo_id:int,db: Session=Depends(get_db)):
+    todo=db.query(Todo).filter(Todo.id==todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404,detail="Todo not found")
+    db.delete(todo)
+    db.commit()
+    return {"message":"Todo Deleted Successfully"}
+    
