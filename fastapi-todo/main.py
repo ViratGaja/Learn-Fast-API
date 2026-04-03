@@ -30,3 +30,14 @@ def create(todo: TodoCreate, db: Session = Depends(get_db)):
      db.refresh(db_todo)  # DB-la generate aana 'id'-ya thirumba model-ku kondu vaa
      
      return db_todo       # Create aana data-va response-ah thirumba anupu
+ 
+ 
+ 
+ #Get
+ 
+@app.get("/todos",response_model=list[TodoSchema])
+def ready_todos(db: Session=Depends(get_db)):
+    return db.query(Todo).all()
+
+
+
